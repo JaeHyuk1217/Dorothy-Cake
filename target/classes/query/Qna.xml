@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.board.qna.dao.BoardDao">
+	
+	<!-- 게시판 리스트 기본 조회
+	<select id="boardList" parameterType="board" resultType="board">
+		SELECT b_num, b_name, b_title, TO_CHAR(b_date, 'YYYY-MM-DD') as b_date, readcnt
+		FROM spring_board
+		ORDER BY b_num desc
+	</select> -->
+	
+	<!-- 게시판 리스트 검색 부분 추가 
+	<select id="boardList" parameterType="board" resultType="board">
+		SELECT b_num, b_name, b_title, TO_CHAR(b_date, 'YYYY-MM-DD') as b_date, readcnt, b_thumb, b_file,
+		(select count(r_num) from spring_reply where b_num = boardlist.b_num) as r_cnt
+		FROM spring_board boardlist
+		<where>
+			<if test="search == 'b_title'">
+				<![CDATA[b_title LIKE '%' || #{keyword} || '%']]>
+			</if>
+			<if test="search == 'b_content'">
+				<![CDATA[b_content LIKE '%' || #{keyword} || '%']]>
+			</if>
+			<if test="search == 'b_name'">
+				<![CDATA[b_name LIKE '%' || #{keyword} || '%']]>
+			</if>
+		</where>
+		ORDER BY b_num desc
+	</select> -->
+	
+	
+	
+	<!-- 게시판 리스트 조회(페이징 처리와 검색 처리) 및 댓글 갯수 구하기 -->
+	<!-- 힌트(hint): 개발자가 데이터베이스에 어떤 방식으로 실행해 줘야 하는지를 명시하기 때문에 강제성을 부여한다.
+		 구문 : /*+ 로 시작하고 */로 종료된다. /*+ INDEX_DESC(테이블 인덱스명[기본키 설정시 제약조건명으로 인덱스 자동 생성]) */ -->
+	<!-- <select id="boardList" parameterType="board" resultType="board">
+		<![CDATA[
+		SELECT
+			q_num, m_id, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_thumb, q_file,
+			(select count(q_num) from reply_qna where q_num = boardlist.q_num) as rq_cnt
+		FROM(
+			SELECT /*+ INDEX_DESC(board_qna board_qna_pk) */
+        		ROWNUM as rnum, q_num, q_name, q_title, q_date, q_thumb, q_file
+    		FROM board_qna
+    		WHERE ]]>
+    		<trim prefix="(" suffix=") AND " prefixOverrides="AND">
+    			<include refid="boardSearch"></include>
+    		</trim>
+    		<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+    		) boardlist
+    	WHERE rnum > (#{pageNum} - 1) * #{amount}
+    	]]>	
+	</select>   -->
+
+	<!-- <select id="boardList" parameterType="board" resultType="board">
+		SELECT q_num, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date
+		FROM board_qna, member
+		WHERE board_qna.m_id = member.m_id
+	</select> -->
+	
+	<!-- <select id="boardList" parameterType="board" resultType="board">
+		SELECT q_num, q_category, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_status
+		FROM board_qna, member
+		WHERE board_qna.m_id = member.m_id
+	</select> -->
+	
+	<!-- 나의 문의글 찾기 클릭 시? -->
+	<!-- <select id="boardList" parameterType="board" resultType="board">
+		<![CDATA[
+		SELECT q_num, m_nick as m_id, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_readcnt, q_file,
+			   (SELECT COUNT(f_num) FROM reply_free WHERE q_num = bq.q_num) as q_replycnt, q_status, q_category
+		FROM (
+			SELECT /*+ INDEX_DESC(board_free board_qna_pk) */
+				ROWNUM as rnum, q_num, m_id, q_title, q_date, q_readcnt, q_file, q_status, q_category
+			FROM board_qna
+			WHERE ]]>
+			<trim prefix=" AND (" suffix=")">
+				<include refid="boardSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bq, member m 
+		WHERE bq.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select> -->
+	
+	<select id="boardList" parameterType="board" resultType="board">
+		<![CDATA[
+		SELECT q_num, m_nick as m_id, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_readcnt, q_file,
+			   (SELECT COUNT(q_num) FROM reply_qna WHERE q_num = bq.q_num) as q_replycnt, q_status, q_category
+		FROM (
+			SELECT /*+ INDEX_DESC(board_qna board_qna_pk) */
+				ROWNUM as rnum, q_num, m_id, q_title, q_date, q_readcnt, q_file, q_status, q_category
+			FROM board_qna
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bq, member m 
+		WHERE bq.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		ORDER BY q_num DESC
+		]]>
+	</select>
+	
+		<select id="myList" parameterType="member" resultType="board">
+		<![CDATA[
+		SELECT q_num, m_id, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_readcnt, q_file,
+			   (SELECT COUNT(q_num) FROM reply_qna WHERE q_num = bq.q_num) as q_replycnt, q_status, q_category
+		FROM (
+			SELECT /*+ INDEX_DESC(board_qna board_qna_pk) */
+				ROWNUM as rnum, q_num, m_id, q_title, q_date, q_readcnt, q_file, q_status, q_category
+			FROM board_qna
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bq
+		WHERE bq.m_id = #{m_id} AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		ORDER BY q_num DESC
+		]]>
+	</select>
+	
+	
+	
+	<!-- 나의 글 찾기 --> 
+	<!-- <select id="boardMyList" parameterType="board" resultType="board">
+		<![CDATA[
+		SELECT q_num, m_nick as m_id, q_title, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_readcnt, q_file,
+			   (SELECT COUNT(q_num) FROM reply_qna WHERE q_num = bq.q_num) as q_replycnt, q_status, q_category
+		FROM (
+			SELECT /*+ INDEX_DESC(board_qna board_qna_pk) */
+				ROWNUM as rnum, q_num, m_id, q_title, q_date, q_readcnt, q_file, q_status, q_category
+			FROM board_qna
+			WHERE ]]>
+			<trim prefix=" AND (" suffix=")">
+				<include refid="boardSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bq, member m 
+		WHERE bq.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount} AND m_id = ${m_id}
+		ORDER BY q_num DESC
+		]]>
+	</select>  -->
+	
+	<!-- 검색 쿼리 -->
+	<sql id="boardSearch">
+			<if test="search == 'q_title'">
+				<![CDATA[q_title LIKE '%' || #{keyword} || '%']]>
+			</if>
+			<if test="search == 'q_content'">
+				<![CDATA[q_content LIKE '%' || #{keyword} || '%']]>
+			</if>
+			 <if test="search == 'm_id '">
+				<![CDATA[ m.m_nick LIKE '%' || #{keyword} || '%']]>
+			</if> 
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="boardListCnt" parameterType="board" resultType="int">
+		SELECT COUNT(*) FROM board_qna
+		<trim prefix=" WHERE (" suffix=")">
+			<include refid="boardSearch"></include>
+		</trim>
+	</select>
+	
+	<!-- QNA 게시판 상세보기 -->
+	<select id="boardDetail" parameterType="board" resultType="board">
+		SELECT q_num, m_nick as m_id, q_title, q_content, TO_CHAR(q_date, 'YYYY-MM-DD') as q_date, q_readcnt, q_file,
+			   (SELECT COUNT(q_num) FROM reply_qna WHERE q_num = bq.q_num) as q_replycnt
+		FROM board_qna bq, member m
+		WHERE bq.m_id = m.m_id AND q_num = #{q_num}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="readcntUpdate" parameterType="board">
+		UPDATE board_qna
+		SET q_readcnt = q_readcnt + 1
+		WHERE q_num = #{q_num}
+	</update>
+	
+	<!-- 게시물 등록 - 1
+	<insert id="boardInsert" parameterType="board">
+		INSERT INTO spring_board(b_num, b_name, b_title, b_content, b_pwd)
+		VALUES(spring_board_seq.nextval, #{b_name}, #{b_title}, #{b_content}, #{b_pwd})
+	</insert> -->
+	
+	<!-- 게시물 등록 - 2 -->
+	<insert id="boardInsert" parameterType="board">
+		/* Board - boardInsert */
+		<selectKey keyProperty="q_num" resultType="int" order="BEFORE">
+			SELECT board_qna_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO board_qna(q_num,q_category, q_status, m_id, q_title, q_content, q_file)
+		VALUES(#{q_num}, #{q_category}, #{q_status}, #{m_id}, #{q_title}, #{q_content}, #{q_file} )
+		
+		<!-- INSERT INTO board_qna(q_num, q_title, q_content, q_thumb, q_file)
+		VALUES(#{q_num}, #{q_category}, #{q_title}, #{q_content}, #{q_thumb}, #{q_file}, #{q_status}) -->
+	</insert>
+	
+	<!-- 상세 페이지를 위한 게시물 조회 -->
+	<!-- <select id="boardDetail" parameterType="board" resultType="board">
+		/* Board - boardDetail */
+		SELECT
+			q_num, m_nick as m_id, q_title, q_content,
+			TO_CHAR(q_date, 'YYYY-MM-DD HH24:MI:SS') AS q_date, q_readcnt
+		FROM board_qna
+		WHERE q_num = #{q_num}
+	</select> -->
+	
+	
+	
+	
+	
+	<!-- 해당 번호의 비밀번호 확인  -->
+	<!-- <select id="pwdConfirm" parameterType="board" resultType="int">
+		/* Board - pwdConfirm */
+		SELECT NVL((
+					SELECT 1 FROM board_qna
+					WHERE q_num = #{q_num} AND q_pwd = #{q_pwd}
+				), 0) as state
+		FROM dual
+	</select> -->
+	
+	<!-- 게시물 삭제 -->
+	<delete id="boardDelete" parameterType="board">
+		/* Board - boardDelete */
+		DELETE FROM board_qna
+		WHERE q_num = #{q_num}
+	</delete>
+	
+	<!-- 게시물 수정 -->
+	<update id="boardUpdate" parameterType="board">
+		/* Board - boardUpdate */
+		UPDATE board_qna
+		SET q_title = #{q_title},
+		    q_content = #{q_content},
+		    q_date = SYSDATE
+		    
+		    <if test="q_file != ''">
+		    	, q_file = #{q_file}
+		    </if>
+		WHERE q_num = #{q_num}
+	</update>
+	
+	<!-- 글 선택 삭제 시 사용 -->
+	<select id="deleteVO" parameterType="int" resultType="board">
+		SELECT q_num, q_file,
+			(SELECT COUNT(q_num) FROM reply_qna WHERE q_num = #{q_num}) as q_replycnt
+		FROM board_qna
+		WHERE q_num = #{q_num}
+	</select>
+	
+	
+	
+	
+</mapper>

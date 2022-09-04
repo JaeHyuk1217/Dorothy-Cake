@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.cart.dao.MemberCartDao">
+	<select id="cartList" parameterType="member" resultType="cart">
+		SELECT gc_num, c.g_code, gc_amount, c.m_id, c.g_price, c.g_size, g_name, g_file
+		FROM cart c left outer join member m on c.m_id = m.m_id left outer join goods g on c.g_code = g.g_code
+		WHERE c.m_id = #{m_id}
+	</select>
+	
+	<insert id="cartInsert" parameterType="cart">
+	<selectKey keyProperty="gc_num" resultType="int" order="BEFORE">
+			SELECT cart_num_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO cart(gc_num, g_code, gc_amount, g_price, m_id, g_size)
+		VALUES(#{gc_num}, #{g_code}, #{gc_amount}, #{g_price}, #{m_id}, #{g_size})
+	</insert>
+	
+	<select id="getCart" parameterType="int" resultType="cart">
+      SELECT g_name, g.g_size, g.g_price, gc_amount, g_file, gc_num
+      FROM cart c, goods g
+      WHERE c.g_code = g.g_code AND gc_num = #{gc_num}
+   </select>
+	
+	<delete id="cartDelete" parameterType="cart">
+		DELETE FROM cart
+		WHERE gc_num = #{gc_num}
+	</delete>
+	
+	<update id="cartUpdate" parameterType="cart">
+		UPDATE cart
+		set gc_amount = #{gc_amount}
+		WHERE gc_num = #{gc_num}
+	</update>
+	
+	<select id="getCartNum" resultType="int">
+		SELECT cart_num_seq.currval FROM dual
+	</select>
+</mapper>

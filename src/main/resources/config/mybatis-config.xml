@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias type="com.dorothy.member.goods.vo.MemberGoodsVO" alias="goods"/>
+		<typeAlias type="com.dorothy.admin.login.vo.AdminLoginVO" alias="adminLogin"/>
+	      <typeAlias type="com.dorothy.member.board.event.vo.EventVO" alias="event"/>
+	      <typeAlias type="com.dorothy.member.login.vo.MemberVO" alias="member"/>
+	      <typeAlias type="com.dorothy.member.board.free.vo.BoardFreeVO" alias="boardFree" />
+		<typeAlias type="com.dorothy.member.reply.free.vo.ReplyFreeVO" alias="replyFree" />
+		
+		<typeAlias type="com.dorothy.member.board.qna.vo.BoardVO" alias="board"/>
+      <typeAlias type="com.dorothy.member.reply.qna.vo.ReplyVO" alias="reply"/>
+      <typeAlias type="com.dorothy.member.order.customOrder.vo.CustomOrderBoardVO" alias="customOrder" />
+      
+      <typeAlias type="com.dorothy.member.board.notice.vo.BoardNoticeVO" alias="boardNotice"/>
+
+		<typeAlias type="com.dorothy.member.cart.vo.MemberCartVO" alias="cart"/>
+		
+		<typeAlias type="com.dorothy.member.payment.vo.PaymentVO" alias="payment" />
+		<typeAlias type="com.dorothy.member.order.orderInfo.vo.OrderInfoVO" alias="order" />
+		<typeAlias type="com.dorothy.member.order.orderInfo.vo.OrderInfoDTO" alias="orderDto" />
+		
+		<typeAlias type="com.dorothy.admin.reply.review.vo.AdminReplyReviewVO" alias="adminReplyReview" />
+		<typeAlias type="com.dorothy.member.board.review.vo.BoardReviewVO" alias="boardReview"/>
+		
+		<typeAlias type="com.dorothy.admin.reply.customOrder.vo.CustomOrderReplyVO" alias="replyCustomOrder" />
+	</typeAliases>
+</configuration>

@@ -1,0 +1,5 @@
+@charset "UTF-8";
+.table-height{min-height: 407px;}
+.image_size{width: 80px; height : 113px;}
+.reply_count{font-size: 10px; color: red;}
+.required {color: red;}

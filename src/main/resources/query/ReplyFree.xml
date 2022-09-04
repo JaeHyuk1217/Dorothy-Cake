@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.reply.free.dao.ReplyFreeDao">
+	
+	<!-- 자유게시판 댓글 조회 -->
+	<select id="replyFreeList" parameterType="replyFree" resultType="replyFree">
+		SELECT rf_num, f_num, m_nick as m_id, rf_content, TO_CHAR(rf_date, 'YYYY-MM-DD HH24:MI:SS') as rf_date
+		FROM reply_free, member
+		WHERE reply_free.m_id = member.m_id AND f_num = #{f_num}
+		ORDER BY rf_num DESC
+	</select>
+	
+	<!-- 자유게시판 댓글 쓰기 -->
+	<insert id="replyFreeInsert" parameterType="replyFree">
+		<selectKey keyProperty="rf_num" resultType="int" order="BEFORE">
+			SELECT reply_free_seq.nextval FROM dual
+		</selectKey>
+		INSERT INTO reply_free(rf_num, f_num, m_id, rf_content)
+		VALUES(#{rf_num}, #{f_num}, #{m_id}, #{rf_content})
+	</insert>
+	
+	<!-- 자유게시판 댓글 삭제 -->
+	<delete id="replyFreeDelete" parameterType="replyFree">
+		DELETE FROM reply_free
+		WHERE rf_num = #{rf_num}
+	</delete>
+	
+	<!-- 자유게시판 댓글 수정 -->
+	<update id="replyFreeUpdate" parameterType="replyFree">
+		UPDATE reply_free
+		SET rf_content = #{rf_content}, rf_date = SYSDATE
+		WHERE rf_num = #{rf_num}
+	</update>
+	
+	<!-- 자유게시판 글에 포함된 댓글 모두 삭제 -->
+	<delete id="replyAllDelete" parameterType="int">
+		DELETE FROM reply_free
+		WHERE f_num = #{f_num}
+	</delete>
+</mapper>

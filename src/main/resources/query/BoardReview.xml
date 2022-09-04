@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.board.review.dao.BoardReviewDao">
+
+	<!-- 리뷰게시판 리스트 조회 -->
+	<select id="boardReviewList" parameterType="boardReview" resultType="boardReview">
+		<![CDATA[
+		SELECT r_num, m_nick as m_id, r_title, TO_CHAR(r_date, 'YYYY-MM-DD') as r_date, r_readcnt, r_file, r_thumbnail,
+			   (SELECT COUNT(r_num) FROM reply_review WHERE r_num = br.r_num) as r_replycnt
+		FROM (
+			SELECT /*+ INDEX_DESC(board_review board_review_pk) */
+				ROWNUM as rnum, r_num, m_id, r_title, r_date, r_readcnt, r_file, r_thumbnail
+			FROM board_review
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardReviewSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) br, member m 
+		WHERE br.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="boardReviewSearch">
+		<if test="search == 'r_title'">
+			<![CDATA[ r_title LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'r_content'">
+			<![CDATA[ r_content LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'm_id'">
+			<![CDATA[ br.m_id = (SELECT m_id FROM member WHERE m_nick LIKE '%' || #{keyword} || '%' ) ]]>
+		</if>
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="boardReviewListCnt" parameterType="boardReview" resultType="int">
+		SELECT count(*) FROM board_review
+		<trim prefix=" WHERE (" suffix=")">
+				<include refid="boardReviewSearch"></include>
+		</trim>
+	</select>
+	
+	<!-- 리뷰게시판 상세보기 -->
+	<select id="boardReviewDetail" parameterType="boardReview" resultType="boardReview">
+		SELECT r_num, m_nick as m_id, r_title, r_content, TO_CHAR(r_date, 'YYYY-MM-DD') as r_date, r_readcnt, r_file, r_thumbnail,
+			   (SELECT COUNT(r_num) FROM reply_review WHERE r_num = br.r_num) as r_replycnt
+		FROM board_review br, member m
+		WHERE br.m_id = m.m_id AND r_num = #{r_num}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="readcntUpdate" parameterType="boardReview">
+		UPDATE board_review
+		SET r_readcnt = r_readcnt + 1
+		WHERE r_num = #{r_num}
+	</update>
+	
+	<!-- 리뷰게시판 글쓰기 -->
+	<insert id="boardReviewInsert" parameterType="boardReview">
+		<selectKey keyProperty="r_num" resultType="int" order="BEFORE">
+			SELECT board_review_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO board_review(r_num, m_id, r_title, r_content, r_file, r_thumbnail)
+		VALUES(#{r_num}, #{m_id}, #{r_title}, #{r_content}, #{r_file}, #{r_thumbnail})
+	</insert>
+	
+	<!-- 리뷰게시판 글 삭제 -->
+	<delete id="boardReviewDelete" parameterType="boardReview">
+		DELETE FROM board_review
+		WHERE r_num = #{r_num}
+	</delete>
+	
+	<!-- 리뷰게시판 글 수정 -->
+	<update id="boardReviewUpdate" parameterType="boardReview">
+		UPDATE board_review
+		SET r_title = #{r_title},
+			r_content = #{r_content},
+			<if test="r_thumbnail != ''">
+				, r_thumbnail = #{r_thumbnail}
+			</if>
+			<if test="r_file != ''">
+				, r_file = #{r_file}
+			</if>
+		WHERE r_num = #{r_num}
+	</update>
+	
+	<!-- 글 선택 삭제 시 사용 -->
+	<select id="deleteVO" parameterType="int" resultType="boardReview">
+		SELECT r_num, r_file,
+			(SELECT COUNT(r_num) FROM reply_review WHERE r_num = #{r_num}) as r_replycnt
+		FROM board_review
+		WHERE r_num = #{r_num}
+	</select>
+
+</mapper>

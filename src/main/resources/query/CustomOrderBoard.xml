@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.order.customOrder.dao.CustomOrderBoardDao">
+
+	<!-- 커스텀 제품 주문 게시판 리스트 조회 
+	<select id="customOrderList" parameterType="customOrder" resultType="customOrder">
+		SELECT c_num, c_title, c_inquiry, c_size, c_etc, c_dessert, c_code, c_price, c_amount, m_nick as m_id, TO_CHAR(c_receiptdate, 'YYYY-MM-DD') c_receiptdate
+		FROM board_customorder
+		ORDER BY c_num desc
+	</select> -->
+	
+	<select id="customOrderList" parameterType="customOrder" resultType="customOrder">
+		<![CDATA[
+		SELECT c_num, m_nick, c_title, TO_CHAR(c_receiptdate, 'YYYY-MM-DD') as c_receiptdate, c_file, c_inquiry,
+			   (SELECT COUNT(c_num) FROM reply_customorder WHERE c_num = bc.c_num) as c_replycnt
+		FROM (
+			SELECT /*+ INDEX_DESC(board_customorder board_customorder_pk) */
+				ROWNUM as rnum, c_num, m_id, c_title, c_receiptdate, c_file, c_inquiry
+			FROM board_customorder
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardCustomOrderSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bc, member m 
+		WHERE bc.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<select id="customOrderListCnt" parameterType="customOrder" resultType="int">
+		SELECT count(*) FROM board_customorder
+		<trim prefix=" WHERE (" suffix=")">
+				<include refid="boardCustomOrderSearch"></include>
+		</trim>
+	</select> 
+	
+	<!-- 검색 쿼리 -->
+	<sql id="boardCustomOrderSearch">
+		<if test="search == 'c_title'">
+			<![CDATA[ c_title LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'c_content'">
+			<![CDATA[ c_content LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'm_id'">
+			<![CDATA[ bc.m_id = (SELECT m_id FROM member WHERE m_nick LIKE '%' || #{keyword} || '%' ) ]]>
+		</if>
+	</sql>
+	
+	<!-- 커스텀 제품 주문 게시판 글쓰기 -->
+	<insert id="customOrderInsert" parameterType="customOrder">
+		<selectKey keyProperty="c_num" resultType="int" order="BEFORE">
+			SELECT board_customorder_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO board_customorder(c_num, c_title, c_inquiry, c_size, c_etc, c_dessert, c_content, c_file, c_code, c_price, c_amount, m_id)
+		VALUES(#{c_num}, #{c_title}, #{c_inquiry}, #{c_size}, #{c_etc}, #{c_dessert}, #{c_content}, #{c_file}, #{c_code}, #{c_price}, #{c_amount}, #{m_id})
+	</insert>
+	
+	<!-- 커스텀 제품 주문 게시판 상세보기 -->
+	<select id="customOrderDetail" parameterType="customOrder" resultType="customOrder">
+		SELECT c_num, c_title, c_inquiry, c_size, c_etc, c_dessert, c_content, c_file, c_code, c_price, c_amount, TO_CHAR(c_receiptdate, 'YYYY-MM-DD') c_receiptdate, m_nick as m_id, g_name,
+		(SELECT COUNT(c_num) FROM reply_customorder WHERE c_num = board_customorder.c_num) as c_replycnt
+		FROM board_customorder inner join member on board_customorder.m_id = member.m_id 
+		where c_num = #{c_num}
+	</select>
+	
+	<!-- 커스텀 제품 주문 게시판 글 수정 -->
+	<update id="customOrderUpdate" parameterType="customOrder">
+		UPDATE board_customorder
+		SET c_title = #{c_title}, c_content = #{c_content}, c_receiptdate = #{c_receiptdate},
+		c_size = #{c_size}, c_etc = #{c_etc}, c_dessert = #{c_dessert}
+			<if test="c_file != ''">
+				, c_file = #{c_file}
+			</if>
+		WHERE c_num = #{c_num}
+	</update>
+	
+	<!-- 커스텀 제품 주문 게시판 글 삭제 -->
+	<delete id="customOrderDelete" parameterType="customOrder">
+		DELETE FROM board_customorder
+		WHERE c_num = #{c_num}
+	</delete>
+	
+	<!-- 관리자 커스텀 제품 주문 게시판 글 수정(가격) -->
+	<update id="customOrderPriceupdate" parameterType="customOrder">
+		UPDATE board_customorder
+		SET c_price = #{c_price},
+		g_name = #{g_name}
+		WHERE c_num = #{c_num}
+	</update>
+	
+	
+</mapper>

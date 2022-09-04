@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.admin.reply.customOrder.dao.CustomOrderReplyDao">
+	
+	
+	<!-- 댓글 전체 조회(해당 게시물번호에 대해) -->
+	<select id="replyCustomOrderList" parameterType="replyCustomOrder" resultType="replyCustomOrder">
+		select rc_num, c_num, rc_content, ad_id,
+			   to_char(rc_date, 'YYYY-MM-DD HH24:MI:SS') as rc_date
+		from reply_customorder
+		where c_num = #{c_num}
+		order by rc_num desc
+	</select>
+	
+	<!-- 댓글 등록 -->
+	<insert id="replyCustomOrderInsert" parameterType="replyCustomOrder">
+		<selectKey keyProperty="rc_num" resultType="int" order="BEFORE">
+			SELECT reply_customorder_seq.nextval FROM dual
+		</selectKey>
+		INSERT INTO reply_customorder(rc_num, c_num, ad_id, rc_content)
+		VALUES(#{rc_num}, #{c_num}, #{ad_id}, #{rc_content})
+	</insert>
+	
+	<!-- 답변 상태 변경 -->
+	<update id="inquiryUpdate" parameterType="replyCustomOrder">
+		/* Reply - inquiryUpdate */
+		update board_customorder
+		set c_inquiry = '답변완료'
+		where c_num = #{c_num}
+	</update>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.goods.dao.MemberGoodsDao">
+	<select id="goodsList" parameterType="goods" resultType="goods">
+		select * from goods where g_type = 1 and g_custom = 1
+	</select>
+	
+	<select id="goodsListLetter" parameterType="goods" resultType="goods">
+		select * from goods where g_type = 2 and g_custom = 1
+	</select>
+	
+	<select id="goodsListAddition" parameterType="goods" resultType="goods">
+		select * from goods where g_type = 3 and g_custom = 1
+	</select>
+	
+	<select id="goodsDetail" parameterType="goods" resultType="goods">
+		select * from goods where g_code = #{g_code}
+	</select>
+</mapper>

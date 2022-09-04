@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dorothy.member.board.event.dao.EventDAO">
+
+	<!-- 게시판 리스트 기본 조회 
+	<select id="eventList" parameterType="event" resultType="event">
+		SELECT e_num, e_title, ad_id, to_char(e_date, 'YYYY-MM-DD') as e_date
+		FROM board_event
+		ORDER BY e_num desc
+	</select> -->
+	
+	<!-- 게시판 리스트 검색 부분 추가 
+	<select id="eventList" parameterType="event" resultType="event">
+		SELECT e_num, e_title, ad_id, to_char(e_date, 'YYYY-MM-DD') as e_date , e_thumb, e_file
+		FROM board_event eventList
+		<where>
+			<if test="search=='e_title'">
+				<![CDATA[ e_title LIKE '%' || #{keyword} ||'%']]>
+			</if>
+			<if test="search=='e_content'">
+				<![CDATA[ e_content LIKE '%' || #{keyword} ||'%']]>
+			</if>
+		</where>
+		ORDER BY e_num desc
+	</select> -->
+	
+	<select id="eventList" parameterType="event" resultType="event">
+		<![CDATA[
+		SELECT e_num, e_title, e_content, ad_id, to_char(e_date, 'YYYY-MM-DD') as e_date , e_thumb, e_file
+		FROM (
+			SELECT /*+ INDEX_DESC(board_event board_event_pk) */
+				ROWNUM as rnum, e_num, e_content, e_title, ad_id, e_date, e_thumb, e_file
+			FROM board_event
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND " prefixOverrides="AND">
+				<include refid="eventSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) board_event
+		WHERE rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	<!-- 게시판 리스트 조회 (페이징 처리와 검색처리)및 댓글 개수 구하기 
+	<select id="eventList" parameterType="event" resultType="event">
+		<![CDATA[
+		SELECT	e_num, e_name,e_title, ad_id to_char(e_date,'YYYY-MM-DD') as e_date, e_thumb, e_file
+				
+		FROM (
+				SELECT /* INDEX_DESC(board_event board_event_pk)   */
+            		rownum as rnum, e_num, e_title, ad_id, e_date, e_thumb, e_file
+         		from board_event 
+         		WHERE ]]>
+         		<trim prefix="(" suffix=") AND " prefixOverrides="AND">
+         			<include refid="eventSearch"></include>
+         		</trim>
+         	<![CDATA[		rownum <= #{pageNum} * #{amount}
+         	 ) eventlist
+         WHERE rnum > (#{pageNum} - 1) * #{amount}
+         ]]>
+	</select>-->
+	<!-- 검색 쿼리 -->
+	<sql id="eventSearch">
+		<if test="search == 'e_title'">
+			<![CDATA[ e_title LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'e_content'">
+			<![CDATA[ e_content LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+	</sql>
+	
+	<!-- 전체 레코드수 조회 -->
+	<select id="eventListCnt" parameterType="list" resultType="int">
+		SELECT count(*) FROM board_event
+		<trim prefix=" where (" suffix=")">
+			<include refid="eventSearch"></include>
+		</trim>
+	</select>
+		
+	<!-- 게시물 등록 -->
+	<insert id="eventInsert" parameterType= "event">
+		/* board_event - eventInsert */
+		<selectKey keyProperty="e_num" resultType="int"	order="BEFORE">
+			select board_event_seq.nextval from dual
+		</selectKey>
+	
+		INSERT INTO board_event(e_num, ad_id, e_title, e_content, e_thumb, e_file)
+		VALUES(#{e_num}, #{ad_id}, #{e_title}, #{e_content}, #{e_thumb}, #{e_file})
+	</insert>
+	
+	<!-- 상세 페이지를 위한 게시물 조회 -->
+	<select id= "eventDetail" parameterType="event" resultType="event">
+		/* board_event - eventDetail */
+		SELECT
+				e_num, e_title, e_content, ad_id,
+				TO_CHAR(e_date, 'YYYY-MM-DD HH24:MI:SS') AS e_date, e_thumb, e_file
+		FROM board_event
+		WHERE e_num = #{e_num}
+	</select>
+	
+		
+	<!-- 게시물 수정 -->
+	<update id= "eventUpdate" parameterType="event">
+		/* board_event - eventUpdate */
+		UPDATE board_event
+		SET	e_title = #{e_title},
+			e_content = #{e_content},
+			e_date = SYSDATE
+			<if test="e_thumb != ''">
+				, e_thumb = #{e_thumb}
+			</if>
+			<if test="e_file != ''">
+				, e_file = #{e_file}
+			</if>
+		WHERE e_num = #{e_num}
+	</update>
+	
+	<!-- 게시물 삭제 -->
+	<delete id = "eventDelete" parameterType="event">
+		/* board_event - eventDelete	*/
+		DELETE FROM board_event
+		WHERE e_num = #{e_num}
+	</delete>
+	
+	<!-- 글 선택 삭제 시 사용 --> 
+	<select id="deleteVO" parameterType="int" resultType="event">
+		SELECT e_num, e_file
+		FROM board_event WHERE e_num = #{e_num}
+	</select>
+</mapper>

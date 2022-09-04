@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.order.orderInfo.dao.OrderInfoDao">
+	
+	<insert id="orderInsert" parameterType="com.dorothy.member.payment.vo.OrderDTO">
+		<selectKey keyProperty="o_num" resultType="int" order="BEFORE">
+			SELECT order_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO order_info (o_num, m_id, p_merchant_uid, g_name, g_size, gc_amount, g_price)
+		VALUES(#{o_num}, #{m_id}, #{p_merchant_uid}, #{g_name}, #{g_size}, #{gc_amount}, #{g_price})
+	</insert>
+	
+	<select id="orderInfoList" parameterType="member" resultType="order">
+		<![CDATA[
+		SELECT oi.o_num, oi.p_merchant_uid, m.m_name as m_id, g_name, g_size, gc_amount, g_price, o_status
+		FROM (
+			SELECT /*+ INDEX_DESC(order_info order_info_pk) */
+				ROWNUM as rnum, o_num, p_merchant_uid, m_id, g_name, g_size, gc_amount, g_price, o_status
+			FROM order_info
+			WHERE ]]>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) oi, member m
+		WHERE oi.m_id = #{m_id} AND oi.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 게시판 상세보기 -->
+	<select id="orderInfoDetail" parameterType="order" resultType="orderDto">
+		SELECT oi.o_num, m.m_name, oi.p_merchant_uid, p.p_name, p.p_price, p.p_state, m.m_pnb, m.m_addr, m.m_mail, TO_CHAR(p_date, 'YYYY-MM-DD') as p_date, p_pay_method
+		FROM order_info oi left outer join payment p on oi.p_merchant_uid = p.p_merchant_uid left outer join member m on p.m_id = m.m_id 
+		WHERE o_num = #{o_num}
+	</select>
+	
+	<!-- <select id="orderInfoList" parameterType="member" resultType="payment">
+		SELECT p_merchant_uid, m_name as m_id, p_name, p_price, p_date, p_state
+		FROM payment p left outer join member m on p.m_id = m.m_id
+		WHERE p.m_id = #{m_id}
+	</select> -->
+	
+
+	<!-- 관리자 페이지 주문 리스트 -->
+	<select id="adminOrderInfoList" parameterType="member" resultType="order">
+		<![CDATA[
+		SELECT oi.o_num, oi.p_merchant_uid, m.m_name as m_id, g_name, g_size, gc_amount, g_price, o_status
+		FROM (
+			SELECT /*+ INDEX_DESC(order_info order_info_pk) */
+				ROWNUM as rnum, o_num, p_merchant_uid, m_id, g_name, g_size, gc_amount, g_price, o_status
+			FROM order_info
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="orderInfoSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) oi, member m
+		WHERE oi.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	
+	
+	<!-- 검색 쿼리 -->
+	<sql id="orderInfoSearch">
+			<if test="search == 'm_id'">
+				<![CDATA[m_id = (SELECT m_id FROM member WHERE m_name LIKE '%' || #{keyword} || '%' )]]>
+			</if>
+			<if test="search == 'p_merchant_uid'">
+				p_merchant_uid = #{keyword} 
+			</if>
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="orderInfoListCnt" parameterType="order" resultType="int">
+		SELECT COUNT(*) FROM order_info
+		<trim prefix=" WHERE (" suffix=")">
+			<include refid="orderInfoSearch"></include>
+		</trim>
+	</select>
+	
+	
+	
+	<!-- 엑셀 다운로드 -->
+	<select id="orderListExcel" parameterType="order" resultType="order">
+		SELECT o_num, o.p_merchant_uid, m.m_name as m_id,o.g_name, o.g_size, o.gc_amount, o.g_price, o_status
+		FROM order_info o left outer join payment p on o.p_merchant_uid = p.p_merchant_uid, member m
+		WHERE o.m_id = m.m_id
+		<where>
+			<include refid="orderInfoSearch"></include>
+		</where>
+	</select>
+</mapper>

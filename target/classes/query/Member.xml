@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dorothy.member.login.dao.MemberDAO">
+    
+   <!-- 회원가입 -->
+	<insert id="register" parameterType="member">
+		insert into member(m_id, m_pwd, m_name, m_nick, m_mail, m_pnb, m_addr, m_addr2, m_addr3)
+    	values(#{m_id}, #{m_pwd}, #{m_name}, #{m_nick}, #{m_mail}, #{m_pnb}, #{m_addr}, #{m_addr2}, #{m_addr3})
+	</insert>
+	
+	<!-- 로그인 -->
+	<select id="login" resultType="member">
+		SELECT m_id, m_pwd, m_name, m_nick, m_mail, m_pnb, m_addr, m_addr2, m_addr3, m_state
+		  FROM member
+		 WHERE m_id = #{m_id} AND m_pwd = #{m_pwd} AND m_state = 0
+	</select>
+	
+	<!-- 회원 정보 수정 --> 
+	<update id="memberUpdate" parameterType="member">
+		UPDATE member SET
+		m_pwd = #{m_pwd},
+		m_name = #{m_name},
+		m_nick = #{m_nick},
+		m_mail = #{m_mail},
+		m_pnb = #{m_pnb},
+		m_addr = #{m_addr},
+		m_addr2 = #{m_addr2},
+		m_addr3 = #{m_addr3}
+		WHERE m_id = #{m_id}
+	</update>
+	
+	<!-- 아이디 중복체크 --> 
+	<select id="idcheck" parameterType="String" resultType="Integer">
+      SELECT COUNT(*) FROM member
+      WHERE
+          m_id = #{m_id}
+	</select>
+	
+</mapper>

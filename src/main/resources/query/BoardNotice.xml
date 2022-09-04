@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.board.notice.dao.BoardNoticeDao">
+
+	<select id="boardNoticeList" parameterType="boardNotice" resultType="boardNotice">
+		<![CDATA[
+		SELECT n_num, n_title, TO_CHAR(n_date, 'YYYY-MM-DD') as n_date, n_content, n_readcnt, n_file, ad_id
+		FROM (
+			SELECT /*+ INDEX_DESC(board_free board_free_pk) */
+				ROWNUM as rnum, n_num, n_content, n_title, n_date, n_readcnt, n_file, ad_id
+			FROM board_notice
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardNoticeSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bn 
+		WHERE rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="boardNoticeSearch">
+		<if test="search == 'n_title'">
+			<![CDATA[ n_title LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'n_content'">
+			<![CDATA[ n_content LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+	</sql>
+	<!-- 전체 레코드 수 조회 -->
+	<select id="boardNoticeListCnt" parameterType="boardNotice" resultType="int">
+		SELECT COUNT(*) FROM board_notice
+		<trim prefix=" WHERE (" suffix=")">
+				<include refid="boardNoticeSearch"></include>
+		</trim>
+	</select>
+	
+	<!-- 공지게시판 상세보기 -->
+	<select id="boardNoticeDetail" parameterType="boardNotice" resultType="boardNotice">
+		SELECT n_num, n_title, TO_CHAR(n_date, 'YYYY-MM-DD') as n_date, n_content, n_readcnt, n_file, ad_id
+		FROM board_notice
+		WHERE n_num = #{n_num}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="readcntUpdate" parameterType="boardNotice">
+		UPDATE board_notice
+		SET n_readcnt = n_readcnt + 1
+		WHERE n_num = #{n_num}
+	</update>
+	
+	<!-- 공지게시판 글 삭제 -->
+	<delete id="boardNoticeDelete" parameterType="boardNotice">
+		DELETE FROM board_notice
+		WHERE n_num = #{n_num}
+	</delete>
+	
+	<!-- 글 선택 삭제 시 사용 -->
+	<select id="deleteVO" parameterType="int" resultType="boardNotice">
+		SELECT n_num, n_file
+		FROM board_notice
+		WHERE n_num = #{n_num}
+	</select>
+	
+	<!-- 공지글 등록 -->
+	<insert id="noticeInsert" parameterType="boardNotice">
+		<selectKey keyProperty="n_num" resultType="int" order="BEFORE">
+			SELECT notice_num_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO board_notice(n_num, n_title, n_content, n_file, ad_id, n_readcnt)
+		VALUES(#{n_num}, #{n_title}, #{n_content}, #{n_file}, #{ad_id}, 0)
+	</insert>
+	
+	<!-- 공지글 수정 -->
+	<update id="noticeUpdate" parameterType="boardNotice">
+		UPDATE board_free
+		SET n_title = #{n_title},
+			n_content = #{n_content},
+			n_date = SYSDATE
+			<if test="n_file != ''">
+				, n_file = #{n_file}
+			</if>
+		WHERE n_num = #{n_num}
+	</update>
+	
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+  "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<definition name="basic" template="/WEB-INF/views/template/admin/contentLayout.jsp">
+      <put-attribute name="title" value="관리자 페이지" />
+      <put-attribute name="left" value="/WEB-INF/views/template/admin/left.jsp" />
+      <put-attribute name="header" value="/WEB-INF/views/template/admin/header.jsp" />
+      <put-attribute name="sub" value="/WEB-INF/views/template/admin/sub.jsp" />
+      <put-attribute name="main" value="" />
+   </definition>
+   
+	<definition name="admin/board/*" extends="basic">
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/goods/*" extends="basic">
+      <put-attribute name="title" value="상품 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/goods/{1}.jsp" />
+   </definition>
+   
+    <!-- <definition name="admin/board/*/*" extends="basic">
+      <put-attribute name="title" value="관리자 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/{1}/{2}.jsp" />
+   </definition> -->
+   
+<!--    <definition name="admin/*" extends="basic">
+      <put-attribute name="title" value="관리자 페이지" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/{1}.jsp" />
+   </definition> -->
+   
+   <definition name="admin/member/*" extends="basic">
+      <put-attribute name="title" value="회원 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/member/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/order/*" extends="basic">
+      <put-attribute name="title" value="주문 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/order/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/event/*" extends="basic">
+      <put-attribute name="title" value="이벤트 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/event/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/notice/*" extends="basic">
+      <put-attribute name="title" value="공지 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/notice/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/qna/*" extends="basic">
+      <put-attribute name="title" value="QnA 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/qna/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/free/*" extends="basic">
+      <put-attribute name="title" value="자유 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/free/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/payment/*" extends="basic">
+      <put-attribute name="title" value="결제 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/payment/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/review/*" extends="basic">
+      <put-attribute name="title" value="리뷰 게시판 관리" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/review/{1}.jsp" />
+   </definition>
+   
+   <definition name="admin/board/customOrder/*" extends="basic">
+      <put-attribute name="title" value="" />
+      <put-attribute name="sub" value="" />
+      <put-attribute name="main" value="/WEB-INF/views/admin/board/customOrder/{1}.jsp" />
+   </definition>
+   
+   
+</tiles-definitions>

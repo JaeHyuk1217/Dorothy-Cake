@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+  "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<definition name="index" template="/WEB-INF/views/template/member/dorothyLayout.jsp">
+		<put-attribute name="title" value="DOROTHY CAKE" />	
+		<put-attribute name="header" value="/WEB-INF/views/template/member/header.jsp" />
+		<put-attribute name="body" value="/WEB-INF/views/index.jsp" />
+		<put-attribute name="footer" value="/WEB-INF/views/template/member/footer.jsp" />
+		<put-attribute name="top" value="/WEB-INF/views/template/member/top.jsp" />
+	</definition>
+
+	<definition name="content" template="/WEB-INF/views/template/member/contentLayout.jsp">
+		<put-attribute name="title" value="DOROTHY CAKE" />	
+		<put-attribute name="header" value="/WEB-INF/views/template/member/header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/views/template/member/footer.jsp" />
+	</definition>
+	
+		<definition name="member/goods/*" extends="content">
+		<put-attribute name="title" value="도로시 케이크" />
+		<put-attribute name="body" value="/WEB-INF/views/member/goods/{1}.jsp"/>
+	</definition>
+	
+	<definition name="member/*" extends="content">
+      <put-attribute name="title" value="" />
+      <put-attribute name="body" value="/WEB-INF/views/member/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/board/free/*" extends="content">
+   <put-attribute name="title" value="FREE" />
+   <put-attribute name="body" value="/WEB-INF/views/member/board/free/{1}.jsp" />
+</definition>
+
+	<definition name="member/board/qna/*" extends="content">
+      <put-attribute name="title" value="QnA" />
+      <put-attribute name="body" value="/WEB-INF/views/member/board/qna/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/board/customOrder/*" extends="content">
+      <put-attribute name="title" value="커스텀 주문" />
+      <put-attribute name="body" value="/WEB-INF/views/member/board/customOrder/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/event/*" extends="content">
+         <put-attribute name="title" value="EVENT" />
+         <put-attribute name="body" value="/WEB-INF/views/member/event/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/policy/*" extends="content">
+         <put-attribute name="title" value="" />
+         <put-attribute name="body" value="/WEB-INF/views/member/policy/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/payment/*" extends="content">
+      <put-attribute name="title" value="주문 / 결제" />
+      <put-attribute name="body" value="/WEB-INF/views/member/payment/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/board/review/*" extends="content">
+      <put-attribute name="title" value="REVIEW" />
+      <put-attribute name="body" value="/WEB-INF/views/member/board/review/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/board/notice/*" extends="content">
+      <put-attribute name="title" value="NOTICE" />
+      <put-attribute name="body" value="/WEB-INF/views/member/board/notice/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/order/*" extends="content">
+      <put-attribute name="title" value="주문" />
+      <put-attribute name="body" value="/WEB-INF/views/member/order/{1}.jsp" />
+   </definition>
+   
+   <definition name="member/cart/*" extends="content">
+      <put-attribute name="title" value="CART" />
+      <put-attribute name="body" value="/WEB-INF/views/member/cart/{1}.jsp" />
+   </definition>
+   
+</tiles-definitions>

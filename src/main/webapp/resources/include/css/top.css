@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+#top{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    background:#C1DAD4;
+    transition:all 0.35s ease;
+    z-index:60;
+    border-bottom:1px solid #eee;
+}
+#top .p{
+    display:block;
+    height:72px;
+    line-height:72px;
+    font-size:14px;
+    color:#fff;
+    font-family: 'GmarketSansMedium';
+    transition:all 0.35s ease;
+    -webkit-transition:all 0.35s ease;
+    -khtml-transition:all 0.35s ease;
+    -ms-transition:all 0.35s ease;
+    -o-transition:all 0.35s ease
+}

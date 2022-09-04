@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.admin.goods.dao.AdminGoodsDao">
+	<select id="goodsList" parameterType="goods" resultType="goods">
+		<![CDATA[
+		SELECT g_code, g_name, g_type, g_price, g_file, g_size, g_recommend, g_new, g_custom
+		FROM (
+			SELECT /*+ INDEX_DESC(goods goods_pk) */
+				ROWNUM as rnum, g_code, g_name, g_type, g_price, g_file, g_size, g_recommend, g_new, g_custom
+			FROM goods
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="goodsSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) gl
+		WHERE rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="goodsSearch">
+		<if test="search == 'g_code'">
+			<![CDATA[ g_code = #{keyword} ]]>
+		</if>
+		<if test="search == 'g_name'">
+			<![CDATA[ g_name LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'g_type'">
+			<![CDATA[ g_type = #{keyword} ]]>
+		</if>
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="goodsListCnt" parameterType="goods" resultType="int">
+		SELECT COUNT(*) FROM goods
+		<trim prefix=" WHERE (" suffix=")">
+				<include refid="goodsSearch"></include>
+		</trim>
+	</select>
+	
+	<!-- 상품 상세보기 -->
+	<select id="goodsDetail" parameterType="goods" resultType="goods">
+		SELECT g_code, g_name, g_type, g_price, g_file, g_size, g_recommend, g_new, g_custom
+		FROM goods
+		WHERE g_code = #{g_code}
+	</select>
+	
+	<!-- 상품 삭제 -->
+	<delete id="goodsDelete" parameterType="goods">
+		DELETE FROM goods
+		WHERE g_code = #{g_code}
+	</delete>
+	
+	<!-- 상품 수정 -->
+	<update id="goodsUpdate" parameterType="goods">
+		UPDATE goods
+		SET g_name = #{g_name},
+			g_price = #{g_price},
+			g_recommend = #{g_recommend},
+			g_new = #{g_new}
+			<if test="g_file != ''">
+				, g_file = #{g_file}
+			</if>
+		WHERE g_code = #{g_code}
+	</update>
+	
+	<!-- 상품 등록 -->
+	<insert id="goodsInsert" parameterType="goods">
+		<selectKey keyProperty="g_code" resultType="int" order="BEFORE">
+			SELECT goods_code_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO goods(g_code, g_name, g_type, g_price, g_file, g_size, g_recommend, g_new, g_custom)
+		VALUES(#{g_code}, #{g_name}, #{g_type}, #{g_price}, #{g_file}, #{g_size}, #{g_recommend}, #{g_new}, #{g_custom})
+	</insert>
+	
+		<!-- 글 선택 삭제 시 사용 -->
+	<select id="deleteVO" parameterType="int" resultType="goods">
+		SELECT g_code, g_file
+		FROM goods
+		WHERE g_code = #{g_code}
+	</select>
+	
+	<select id="goodsListExcel" parameterType="goods" resultType="goods">
+		SELECT /*+ INDEX_DESC(goods goods_pk) */
+		g_code, g_name, g_type, g_price, g_file, g_new, g_recommend
+		FROM goods
+		<where>
+			<include refid="goodsSearch"></include>
+		</where>
+	</select>
+	
+	<!--  커스텀 제품 등록  -->
+	<insert id="customOrderGoodsInsert" parameterType="goods">
+	<selectKey keyProperty="g_code" resultType="int" order="BEFORE"> 
+		SELECT goods_code_seq.nextval FROM dual 
+	</selectKey>
+		INSERT INTO goods(g_code, g_name, g_type, g_price, g_file, g_size, g_recommend, g_new, g_custom) 
+		VALUES(#{g_code}, #{g_name}, #{g_type}, #{g_price}, #{g_file}, #{g_size}, #{g_recommend}, #{g_new}, #{g_custom})
+	</insert>
+	<!--  커스텀 제품 상품코드 가져오기  -->
+	<select id="getCode" parameterType="customOrder" resultType="int"> 
+		SELECT g_code FROM goods where g_name = #{g_name} 
+	</select>
+</mapper>

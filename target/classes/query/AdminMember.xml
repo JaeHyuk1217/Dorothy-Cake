@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.admin.member.dao.AdminMemberDao">
+	<resultMap type="java.util.TreeMap" id="graph" />
+	
+	<!-- 회원 기본 조회(정렬과 페이징 처리) --> 
+	<select id="adminMemberList" parameterType="member" resultType="member">
+		<![CDATA[
+		select m_id, m_pwd, m_addr, m_addr2, m_addr3, m_date, m_state
+        ,REGEXP_REPLACE(M_NAME, '.', '*', 2) AS M_NAME
+        ,REGEXP_REPLACE(M_PNB, '(\d{3})\-(\d{3,4})\-(\d{4})', '\1-****-\3') AS M_PNB
+        ,CONCAT('***', SUBSTR(m_mail, 4, LENGTH(m_mail))) as m_mail
+    	FROM
+        (   
+            select /*+ INDEX_DESC(member member_pk) */
+                    rownum as rnum, m_id, m_pwd, m_name, m_addr, m_addr2, m_addr3, m_mail, m_pnb, m_date, m_state
+            from member
+            where ]]>
+         		<trim prefix="(" suffix=") AND " prefixOverrides="AND">
+         			<include refid="adminMemberSearch"></include>
+         		</trim>
+         	<![CDATA[		rownum <= #{pageNum} * #{amount}
+         	 ) member
+         WHERE rnum > (#{pageNum} - 1) * #{amount}
+         ]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="adminMemberSearch">
+		<if test="search == 'm_name'">
+			<![CDATA[ m_name LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'm_id'">
+			<![CDATA[ m_id LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+	</sql>
+	
+	<!-- 회원강제탈퇴 -->
+	<update id = "adminMemberUpdate" parameterType="member">
+		UPDATE member SET m_state = 1
+		WHERE m_id = #{m_id}
+	</update>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="adminMemberListCnt" parameterType="member" resultType="int">
+		SELECT count(*) FROM member
+	</select>
+</mapper>

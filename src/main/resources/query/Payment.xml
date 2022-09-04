@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.payment.dao.PaymentDao">
+	
+	<!-- 주문번호 생성 -->
+	<select id="makeUid" resultType="String">
+		SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '000' || merchant_uid_seq.nextval as p_merchant_uid
+		FROM dual
+	</select>
+	
+	<!-- 결제 리스트 조회 -->
+<!-- 	<select id="paymentList" parameterType="payment" resultType="payment"> -->
+<!-- 		SELECT p_merchant_uid, m_name as m_id, p_price, p_state, p_date -->
+<!-- 		FROM payment p, member m -->
+<!-- 		WHERE p.m_id = m.m_id -->
+<!-- 	</select> -->
+
+	<select id="paymentList" parameterType="payment" resultType="payment">
+		<![CDATA[
+		SELECT p_merchant_uid, m_name as m_id, p_name, p_price, p_state, p_date
+		FROM (
+			SELECT /*+ INDEX_DESC(payment payment_pk) */
+				ROWNUM as rnum, p_merchant_uid, m_id, p_name, p_price, p_state, p_date
+			FROM payment
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="paymentSearch"></include>
+			</trim>
+			 <![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) pay, member m
+		WHERE pay.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="paymentSearch">
+		<if test="search == 'p_merchant_uid'">
+			<![CDATA[ p_merchant_uid LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'm_id'">
+			<![CDATA[ m_id LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="paymentListCnt" parameterType="payment" resultType="int">
+		SELECT COUNT(*) FROM payment
+	</select>
+	
+	<!-- 결제 성공 -->
+	<insert id="paymentSuccess" parameterType="payment">
+		INSERT INTO payment(p_merchant_uid, m_id, p_price, p_name, p_state)
+		VALUES(#{p_merchant_uid}, #{m_id}, #{p_price}, #{p_name}, #{p_state})
+	</insert>
+	
+	<!-- 결제 취소 -->
+	<update id="paymentCancel" parameterType="payment">
+		UPDATE payment
+		SET p_state = #{p_state}
+		WHERE p_merchant_uid = #{p_merchant_uid}
+	</update>
+	
+	<!-- 엑셀 다운로드 -->
+   <select id="paymentListExcel" parameterType="payment" resultType="payment">
+      SELECT p_merchant_uid, m_name as m_id, p_name, p_price, p_date, p_state
+      FROM payment p, member m
+      WHERE p.m_id = m.m_id
+      <where>
+         <include refid="paymentSearch"></include>
+      </where>
+   </select>
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dorothy.member.board.free.dao.BoardFreeDao">
+	
+	<!--  자유게시판 리스트 조회 -->
+<!-- 	<select id="boardFreeList" parameterType="boardFree" resultType="boardFree">
+		<![CDATA[
+		SELECT f_num, m_nick as m_id, f_title, TO_CHAR(f_date, 'YYYY-MM-DD') as f_date, f_readcnt, f_file,
+			   (SELECT COUNT(f_num) FROM reply_free WHERE f_num = bf.f_num) as f_replycnt
+		FROM board_free bf, member m
+		WHERE bf.m_id = m.m_id ]]>
+		<trim prefix=" AND (" suffix=")">
+			<include refid="boardFreeSearch"></include>
+		</trim>
+		ORDER BY f_num DESC
+	</select> -->
+	
+	<select id="boardFreeList" parameterType="boardFree" resultType="boardFree">
+		<![CDATA[
+		SELECT f_num, m_nick as m_id, f_title, TO_CHAR(f_date, 'YYYY-MM-DD') as f_date, f_readcnt, f_file,
+			   (SELECT COUNT(f_num) FROM reply_free WHERE f_num = bf.f_num) as f_replycnt
+		FROM (
+			SELECT /*+ INDEX_DESC(board_free board_free_pk) */
+				ROWNUM as rnum, f_num, m_id, f_title, f_date, f_readcnt, f_file
+			FROM board_free
+			WHERE ]]>
+			<trim prefix="(" suffix=") AND" suffixOverrides="AND">
+				<include refid="boardFreeSearch"></include>
+			</trim>
+			<![CDATA[ ROWNUM <= #{pageNum} * #{amount}
+			) bf, member m 
+		WHERE bf.m_id = m.m_id AND rnum > ( #{pageNum} - 1 ) * #{amount}
+		]]>
+	</select>
+	
+	<!-- 검색 쿼리 -->
+	<sql id="boardFreeSearch">
+		<if test="search == 'f_title'">
+			<![CDATA[ f_title LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'f_content'">
+			<![CDATA[ f_content LIKE '%' || #{keyword} || '%' ]]>
+		</if>
+		<if test="search == 'm_id'">
+			<![CDATA[ bf.m_id = (SELECT m_id FROM member WHERE m_nick LIKE '%' || #{keyword} || '%' ) ]]>
+		</if>
+	</sql>
+	
+	<!-- 전체 레코드 수 조회 -->
+	<select id="boardFreeListCnt" parameterType="boardFree" resultType="int">
+		SELECT COUNT(*) FROM board_free
+		<trim prefix=" WHERE (" suffix=")">
+				<include refid="boardFreeSearch"></include>
+		</trim>
+	</select>
+	
+	<!-- 자유게시판 상세보기 -->
+	<select id="boardFreeDetail" parameterType="boardFree" resultType="boardFree">
+		SELECT f_num, m_nick as m_id, f_title, f_content, TO_CHAR(f_date, 'YYYY-MM-DD') as f_date, f_readcnt, f_file,
+			   (SELECT COUNT(f_num) FROM reply_free WHERE f_num = bf.f_num) as f_replycnt
+		FROM board_free bf, member m
+		WHERE bf.m_id = m.m_id AND f_num = #{f_num}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="readcntUpdate" parameterType="boardFree">
+		UPDATE board_free
+		SET f_readcnt = f_readcnt + 1
+		WHERE f_num = #{f_num}
+	</update>
+	
+	<!-- 자유게시판 글쓰기 -->
+	<insert id="boardFreeInsert" parameterType="boardFree">
+		<selectKey keyProperty="f_num" resultType="int" order="BEFORE">
+			SELECT board_free_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO board_free(f_num, m_id, f_title, f_content, f_file)
+		VALUES(#{f_num}, #{m_id}, #{f_title}, #{f_content}, #{f_file})
+	</insert>
+	
+	<!-- 자유게시판 글 삭제 -->
+	<delete id="boardFreeDelete" parameterType="boardFree">
+		DELETE FROM board_free
+		WHERE f_num = #{f_num}
+	</delete>
+	
+	<!-- 자유게시판 글 수정 -->
+	<update id="boardFreeUpdate" parameterType="boardFree">
+		UPDATE board_free
+		SET f_title = #{f_title},
+			f_content = #{f_content},
+			f_date = SYSDATE
+			<if test="f_file != ''">
+				, f_file = #{f_file}
+			</if>
+		WHERE f_num = #{f_num}
+	</update>
+	
+	<!-- 글 선택 삭제 시 사용 -->
+	<select id="deleteVO" parameterType="int" resultType="boardFree">
+		SELECT f_num, f_file,
+			(SELECT COUNT(f_num) FROM reply_free WHERE f_num = #{f_num}) as f_replycnt
+		FROM board_free
+		WHERE f_num = #{f_num}
+	</select>
+</mapper>
